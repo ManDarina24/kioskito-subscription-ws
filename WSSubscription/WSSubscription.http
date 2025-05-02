@@ -1,0 +1,6 @@
+@WSSubscription_HostAddress = http://localhost:5248
+
+GET {{WSSubscription_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
