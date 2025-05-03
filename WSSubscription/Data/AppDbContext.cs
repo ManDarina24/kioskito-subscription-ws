@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WSSuscripcion.Models;
 using Microsoft.EntityFrameworkCore.Metadata;
+using WSSubscription.Entities;
 
 namespace WSSuscripcion.Data
 {
@@ -9,6 +10,12 @@ namespace WSSuscripcion.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         //Definimos las tablas
-        //public DbSet<SuscriptionsEntity> Suscriptions { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Suscription> Suscriptions { get; set; }
+        public DbSet<Plan> Plans { get; set; }
+
+
+
+
     }
 }

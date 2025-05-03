@@ -14,3 +14,9 @@ obj/
 # Ignorar archivos de configuración de usuario
 *.suo
 *.user
+
+WSSubscription/appsettings.json
+WSSubscription/appsettings.Development.json
+
+
+
