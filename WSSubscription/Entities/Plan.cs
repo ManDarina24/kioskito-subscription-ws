@@ -7,6 +7,6 @@ namespace WSSubscription.Entities
     {
         public int Id { get; set; }
         [Column("id_price")]
-        public string IdPrice { get; set; }
+        public string IdPriceStripe { get; set; }
     }
 }
