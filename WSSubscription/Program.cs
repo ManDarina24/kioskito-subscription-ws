@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using WSSubscription.Services;
 using WSSuscripcion.Data;
 using WSSuscripcion.Models;
 
@@ -19,6 +20,11 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//Mis servicios 
+builder.Services.AddScoped<WSSubscription.Services.ISubscriptionService, WSSubscription.Services.SubscriptionService>();
+
+
 
 
 // Ahora construimos la aplicación

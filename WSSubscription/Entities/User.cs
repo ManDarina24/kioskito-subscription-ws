@@ -9,7 +9,7 @@ namespace WSSubscription.Entities
         public string Name { get; set; }
         public string Email { get; set; }
         [Column("stripe_customer_id")]
-        public string StripeCustomerId { get; set; }
+        public string? StripeCustomerId { get; set; }
         public ICollection<Suscription> Suscriptions { get; set; }
 
 

@@ -35,13 +35,38 @@ namespace WSSubscription.Services
                     {
                         Email = user.Email,
                         Name = user.Name,
-                        Source = request.PaymentMethodId
+                        PaymentMethod = request.PaymentMethodId, 
+                        InvoiceSettings = new CustomerInvoiceSettingsOptions
+                        {
+                            DefaultPaymentMethod = request.PaymentMethodId
+                        }
                     });
 
                     user.StripeCustomerId = customer.Id;
                     _context.Users.Update(user);
                     await _context.SaveChangesAsync();
                 }
+
+                if (string.IsNullOrEmpty(plan.IdPriceStripe))
+                {
+                    return new SubscriptionResponse
+                    {
+                        Success = false,
+                        Message = "Stripe Price ID is missing in plan."
+                    };
+                }
+
+                var existingSubscription = _context.Suscriptions.FirstOrDefault(s => s.UserId == user.Id && s.Status == "active");
+
+                if (existingSubscription != null)
+                {
+                    return new SubscriptionResponse
+                    {
+                        Success = false,
+                        Message = "User already has an active subscription."
+                    };
+                }
+
 
                 // 4. Crear la suscripción en Stripe
                 var stripeSubscriptionService = new Stripe.SubscriptionService();
@@ -63,8 +88,8 @@ namespace WSSubscription.Services
                     UserId = user.Id,
                     PlanId = plan.Id,
                     StripeSubscriptionId = subscription.Id,
-                    StripeInvoiceId = subscription.LatestInvoiceId,
-                    Status = subscription.Status,
+                    StripeInvoiceId = subscription?.LatestInvoiceId ?? "no_invoice",
+                    Status = subscription.Status ?? "incomplete",
                     StartDate = DateTime.UtcNow,
                     EndDate = DateTime.UtcNow.AddMonths(1)
                 };
@@ -84,7 +109,7 @@ namespace WSSubscription.Services
                 return new SubscriptionResponse
                 {
                     Success = false,
-                    Message = $"Stripe error: {ex.Message}"
+                    Message = $"Server error: {ex.Message} | Stack: {ex.StackTrace}"
                 };
             }
             catch (Exception ex)
@@ -92,7 +117,7 @@ namespace WSSubscription.Services
                 return new SubscriptionResponse
                 {
                     Success = false,
-                    Message = $"Server error: {ex.Message}"
+                    Message = $"Server error: {ex.Message} | Stack: {ex.StackTrace}"
                 };
             }
         }
