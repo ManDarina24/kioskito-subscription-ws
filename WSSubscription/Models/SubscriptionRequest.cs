@@ -10,7 +10,6 @@ namespace WSSubscription.Models
         [Required]
         public int PlanId { get; set; }
 
-        [Required]
-        public string PaymentMethodId { get; set; }
+        public string? PaymentMethodId { get; set; }
     }
 }

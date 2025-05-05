@@ -28,6 +28,10 @@ namespace WSSubscription.Entities
 
         [Column("stripe_invoice_id")]
         public string StripeInvoiceId { get; set; }
+        [Column("cancel_at_period_end")]
+        public bool CancelAtPeriodEnd { get; set; }
+        [Column("canceled_at")]
+        public DateTime? CanceledAt { get; set; }
 
         // Propiedad de navegación 
         public User User { get; set; }

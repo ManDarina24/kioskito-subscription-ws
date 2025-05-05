@@ -13,6 +13,7 @@ namespace WSSubscription.Services
         {
             _context = context;
         }
+
         public async Task<SubscriptionResponse> CreateSubscriptionAsync(SubscriptionRequest request)
         {
             try
@@ -30,12 +31,21 @@ namespace WSSubscription.Services
                 // 3. Crear cliente en Stripe si no existe
                 if (string.IsNullOrEmpty(user.StripeCustomerId))
                 {
+                    if (string.IsNullOrEmpty(request.PaymentMethodId))
+                    {
+                        return new SubscriptionResponse
+                        {
+                            Success = false,
+                            Message = "Payment method is required for new customers."
+                        };
+                    }
+
                     var customerService = new CustomerService();
                     var customer = await customerService.CreateAsync(new CustomerCreateOptions
                     {
                         Email = user.Email,
                         Name = user.Name,
-                        PaymentMethod = request.PaymentMethodId, 
+                        PaymentMethod = request.PaymentMethodId,
                         InvoiceSettings = new CustomerInvoiceSettingsOptions
                         {
                             DefaultPaymentMethod = request.PaymentMethodId
@@ -47,16 +57,9 @@ namespace WSSubscription.Services
                     await _context.SaveChangesAsync();
                 }
 
-                if (string.IsNullOrEmpty(plan.IdPriceStripe))
-                {
-                    return new SubscriptionResponse
-                    {
-                        Success = false,
-                        Message = "Stripe Price ID is missing in plan."
-                    };
-                }
-
-                var existingSubscription = _context.Suscriptions.FirstOrDefault(s => s.UserId == user.Id && s.Status == "active");
+                // 4. Verificar si ya tiene una suscripción activa
+                var existingSubscription = _context.Suscriptions
+                    .FirstOrDefault(s => s.UserId == user.Id && s.Status == "active");
 
                 if (existingSubscription != null)
                 {
@@ -67,22 +70,40 @@ namespace WSSubscription.Services
                     };
                 }
 
+                // 5. Validar que el cliente tenga un método predeterminado si no se envió uno nuevo
+                string paymentMethodToUse = request.PaymentMethodId;
 
-                // 4. Crear la suscripción en Stripe
+                if (string.IsNullOrEmpty(paymentMethodToUse))
+                {
+                    var customerService = new CustomerService();
+                    var customer = await customerService.GetAsync(user.StripeCustomerId);
+
+                    if (string.IsNullOrEmpty(customer.InvoiceSettings?.DefaultPaymentMethodId))
+                    {
+                        return new SubscriptionResponse
+                        {
+                            Success = false,
+                            Message = "No payment method found for this customer."
+                        };
+                    }
+                }
+
+                // 6. Crear la suscripción en Stripe 
                 var stripeSubscriptionService = new Stripe.SubscriptionService();
                 var subscription = await stripeSubscriptionService.CreateAsync(new SubscriptionCreateOptions
                 {
                     Customer = user.StripeCustomerId,
                     Items = new List<SubscriptionItemOptions>
-                {
-                    new SubscriptionItemOptions
                     {
-                        Price = plan.IdPriceStripe // debe estar en tu tabla de Plans
-                    }
-                }
+                        new SubscriptionItemOptions
+                        {
+                            Price = plan.IdPriceStripe
+                        }
+                    },
+                    Expand = new List<string> { "latest_invoice" }
                 });
 
-                // 5. Guardar la suscripción en la base de datos
+                // 7. Guardar la suscripción en la base de datos
                 var newSubscription = new Suscription
                 {
                     UserId = user.Id,
@@ -91,7 +112,9 @@ namespace WSSubscription.Services
                     StripeInvoiceId = subscription?.LatestInvoiceId ?? "no_invoice",
                     Status = subscription.Status ?? "incomplete",
                     StartDate = DateTime.UtcNow,
-                    EndDate = DateTime.UtcNow.AddMonths(1)
+                    EndDate = DateTime.UtcNow.AddMonths(1),
+                    CancelAtPeriodEnd = subscription.CancelAtPeriodEnd,
+                    CanceledAt = null
                 };
 
                 _context.Suscriptions.Add(newSubscription);
@@ -109,7 +132,7 @@ namespace WSSubscription.Services
                 return new SubscriptionResponse
                 {
                     Success = false,
-                    Message = $"Server error: {ex.Message} | Stack: {ex.StackTrace}"
+                    Message = $"Stripe error: {ex.Message} | Stack: {ex.StackTrace}"
                 };
             }
             catch (Exception ex)
@@ -121,6 +144,5 @@ namespace WSSubscription.Services
                 };
             }
         }
-    
     }
 }
