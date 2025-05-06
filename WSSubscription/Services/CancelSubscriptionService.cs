@@ -40,7 +40,8 @@ namespace WSSubscription.Services
                 }
 
                 //Suscripcion activa
-                var subscription = _context.Suscriptions.FirstOrDefault(s => s.UserId == user.Id && s.PlanId == request.PlanId);
+                var subscription = _context.Suscriptions.Where(s => s.UserId == user.Id && s.PlanId == request.PlanId
+                                                                && s.CanceledAt == null && !s.CancelAtPeriodEnd).OrderByDescending(s => s.Id).FirstOrDefault(); 
                 if (subscription == null)
                 {
                     return new CancelSubscriptionResponse
@@ -50,8 +51,10 @@ namespace WSSubscription.Services
                     };
                 }
 
+                
+
                 //ya esta cancelada
-                if(subscription.Status == "canceled" || subscription.CancelAtPeriodEnd)
+                if (subscription.Status == "canceled" || subscription.CancelAtPeriodEnd)
                 {
                     return new CancelSubscriptionResponse
                     {
