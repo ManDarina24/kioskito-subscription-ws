@@ -33,6 +33,15 @@ namespace WSSubscription.Entities
         [Column("canceled_at")]
         public DateTime? CanceledAt { get; set; }
 
+        //atributos agregados
+
+        [Column("cancel_at_period_end")]
+        public bool CancelAtPeriodEnd { get; set; } = false;
+
+        [Column("canceled_at")]
+        public DateTime? CanceledAt {  get; set; }
+
+
         // Propiedad de navegación 
         public User User { get; set; }
         public Plan Plan { get; set; }
