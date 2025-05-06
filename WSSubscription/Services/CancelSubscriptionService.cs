@@ -47,23 +47,10 @@ namespace WSSubscription.Services
                     return new CancelSubscriptionResponse
                     {
                         Success = false,
-                        Message = "No subscription found for this user and plan"
+                        Message = "No subscription found for this user and plan or already calceled"
                     };
                 }
-
-                
-
-                //ya esta cancelada
-                if (subscription.Status == "canceled" || subscription.CancelAtPeriodEnd)
-                {
-                    return new CancelSubscriptionResponse
-                    {
-                        Success = false,
-                        Message = "The subscription is already canceled and does not need to be canceled again",
-                        SubscriptionId = subscription.StripeSubscriptionId,
-                        Status = subscription.Status
-                    };
-                }
+            
 
                 //cancelar en stripe
                 var stripeService = new Stripe.SubscriptionService();
