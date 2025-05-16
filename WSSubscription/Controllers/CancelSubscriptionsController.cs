@@ -17,7 +17,7 @@ namespace WSSubscription.Controllers
         }
 
 
-        [HttpPost]
+        [HttpPut]
         public async Task<IActionResult> Cancel([FromBody] CancelSubscriptionRequest request)
         {
             if (!ModelState.IsValid)
