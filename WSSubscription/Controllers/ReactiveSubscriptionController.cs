@@ -6,16 +6,17 @@ namespace WSSubscription.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // Esto define la ruta: api/subscriptions
-    public class SubscriptionsController : ControllerBase
+
+    public class ReactiveSubscriptionController : ControllerBase
     {
         private readonly ISubscriptionService _subscriptionService;
 
-        public SubscriptionsController(ISubscriptionService subscriptionService)
+        public ReactiveSubscriptionController(ISubscriptionService subscriptionService)
         {
             _subscriptionService = subscriptionService;
         }
 
-        [HttpPost]
+        [HttpPut]
         public async Task<IActionResult> CreateSubscription([FromBody] SubscriptionRequest request)
         {
             if (!ModelState.IsValid)
