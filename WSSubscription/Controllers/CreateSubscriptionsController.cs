@@ -6,11 +6,11 @@ namespace WSSubscription.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // Esto define la ruta: api/subscriptions
-    public class SubscriptionsController : ControllerBase
+    public class CreateSubscriptionsController : ControllerBase
     {
         private readonly ISubscriptionService _subscriptionService;
 
-        public SubscriptionsController(ISubscriptionService subscriptionService)
+        public CreateSubscriptionsController(ISubscriptionService subscriptionService)
         {
             _subscriptionService = subscriptionService;
         }
