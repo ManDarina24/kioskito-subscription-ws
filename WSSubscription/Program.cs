@@ -24,6 +24,9 @@ builder.Services.AddSwaggerGen();
 //Mis servicios 
 builder.Services.AddScoped<WSSubscription.Services.ISubscriptionService, WSSubscription.Services.SubscriptionService>();
 builder.Services.AddScoped<WSSubscription.Services.ICancelSubscriptionService, WSSubscription.Services.CancelSubscriptionService>();
+builder.Services.AddScoped<ISubscriptionWebhookService, SubscriptionWebhookService>();
+
+
 
 //CORS
 builder.Services.AddCors(options =>
