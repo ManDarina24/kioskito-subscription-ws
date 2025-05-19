@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Stripe;
+using WSSubscription.Hubs;
 using WSSuscripcion.Data;
 
 namespace WSSubscription.Services
@@ -7,10 +9,12 @@ namespace WSSubscription.Services
     public class SubscriptionWebhookService : ISubscriptionWebhookService
     {
         private readonly AppDbContext _dbContext;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public SubscriptionWebhookService(AppDbContext dbContext)
+        public SubscriptionWebhookService(AppDbContext dbContext, IHubContext<NotificationHub> hubContext)
         {
             _dbContext = dbContext;
+            _hubContext = hubContext;
         }
 
         public async Task HandleSuccessfulPayment(Invoice invoice)
@@ -48,6 +52,11 @@ namespace WSSubscription.Services
 
                 await _dbContext.SaveChangesAsync();
                 Console.WriteLine($"Suscripción actualizada para el usuario: {user.Email}");
+                await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ReceiveNotification", new
+                {
+                    message = $"Pago exitoso para la factura {invoice.Id}",
+                    date = DateTime.UtcNow
+                });
             }
             else
             {
@@ -58,6 +67,7 @@ namespace WSSubscription.Services
         public async Task HandleFinalizedCancellation(Subscription subscription)
         {
             var dbSubscription = await _dbContext.Suscriptions
+                .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.StripeSubscriptionId == subscription.Id);
 
             if (dbSubscription != null)
@@ -66,7 +76,14 @@ namespace WSSubscription.Services
                 dbSubscription.CanceledAt = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync();
                 Console.WriteLine($"Suscripción {dbSubscription.Id} cancelada");
+
+                await _hubContext.Clients.User(dbSubscription.User.Id.ToString()).SendAsync("ReceiveNotification", new
+                {
+                    message = $"Tu suscripción ha sido cancelada.",
+                    date = DateTime.UtcNow
+                });
             }
         }
+
     }
 }

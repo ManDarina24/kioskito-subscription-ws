@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using WSSubscription.Hubs;
 using WSSubscription.Services;
+using WSSubscription.UserIdProviders;
 using WSSuscripcion.Data;
 using WSSuscripcion.Models;
 
@@ -18,6 +21,7 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Agregar servicios como controladores, Swagger, etc.
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -25,7 +29,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<WSSubscription.Services.ISubscriptionService, WSSubscription.Services.SubscriptionService>();
 builder.Services.AddScoped<WSSubscription.Services.ICancelSubscriptionService, WSSubscription.Services.CancelSubscriptionService>();
 builder.Services.AddScoped<ISubscriptionWebhookService, SubscriptionWebhookService>();
-
+builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 
 
 //CORS
@@ -53,5 +57,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/hub/notifications");
+
 app.UseCors("AllowFrontend");
 app.Run();
