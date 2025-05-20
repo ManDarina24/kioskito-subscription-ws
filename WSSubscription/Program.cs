@@ -6,6 +6,10 @@ using WSSuscripcion.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080"; // Usa 8080 como fallback
+
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // Configurar DbContext con MySQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
